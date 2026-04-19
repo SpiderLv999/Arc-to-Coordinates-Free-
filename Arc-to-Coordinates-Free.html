@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arc to Coordinates Converter</title>
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --success-color: #28a745;
+            --bg-color: #f8f9fa;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); padding: 20px; color: #333; }
+        .container { max-width: 650px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        
+        .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        h2 { margin: 0; font-size: 1.5rem; color: #222; }
+        
+        .lang-switch { background: #eee; border-radius: 20px; padding: 5px 15px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.3s; border: 1px solid #ddd; }
+        .lang-switch:hover { background: #e0e0e0; }
+
+        .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .full-width { grid-column: span 2; }
+
+        label { display: block; margin-bottom: 5px; font-size: 0.9rem; font-weight: 600; color: #555; }
+        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
+        input:focus { border-color: var(--primary-color); outline: none; box-shadow: 0 0 0 2px rgba(0,123,255,0.25); }
+
+        button { width: 100%; padding: 12px; background-color: var(--success-color); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: bold; transition: 0.2s; margin-top: 10px; }
+        button:hover { background-color: #218838; transform: translateY(-1px); }
+
+        .output-label { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 25px; }
+        textarea { width: 100%; height: 250px; margin-top: 8px; font-family: 'Cascadia Code', 'Courier New', monospace; padding: 15px; border: 1px solid #ddd; border-radius: 6px; background: #fafafa; font-size: 0.9rem; resize: vertical; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-section">
+        <h2 id="title">เครื่องมือแปลงพิกัดเส้นโค้ง</h2>
+        <button class="lang-switch" onclick="toggleLang()" id="langBtn">EN / TH</button>
+    </div>
+    
+    <div class="input-grid">
+        <div class="full-width">
+            <label id="lbl-radius">รัศมี (Radius)</label>
+            <input type="number" id="radius" value="10" step="any">
+        </div>
+
+        <div>
+            <label id="lbl-cx">จุดศูนย์กลาง X (Center X)</label>
+            <input type="number" id="centerX" value="0" step="any">
+        </div>
+        <div>
+            <label id="lbl-cy">จุดศูนย์กลาง Y (Center Y)</label>
+            <input type="number" id="centerY" value="0" step="any">
+        </div>
+
+        <div>
+            <label id="lbl-start">เริ่มจากองศา (Start Angle)</label>
+            <input type="number" id="startAngle" value="0" step="any">
+        </div>
+        <div>
+            <label id="lbl-end">ถึงองศา (End Angle)</label>
+            <input type="number" id="endAngle" value="45" step="any">
+        </div>
+    </div>
+
+    <button onclick="calculate()" id="btn-calc">คำนวณพิกัด</button>
+
+    <div class="output-label">
+        <label id="lbl-output">ผลลัพธ์ (Coordinates Result):</label>
+    </div>
+    <textarea id="output" readonly></textarea>
+</div>
+
+<script>
+    let currentLang = 'th';
+
+    const translations = {
+        en: {
+            title: "Arc to Coordinates Converter",
+            radius: "Radius",
+            cx: "Center X",
+            cy: "Center Y",
+            start: "Start Angle (Deg)",
+            end: "End Angle (Deg)",
+            calc: "Calculate Coordinates",
+            output: "Coordinates Result (0.5° Step):",
+            header: "Angle | X-Coordinate | Y-Coordinate",
+            alert: "Please fill in all fields with valid numbers."
+        },
+        th: {
+            title: "เครื่องมือแปลงพิกัดเส้นโค้ง",
+            radius: "รัศมี (Radius)",
+            cx: "จุดศูนย์กลาง X (Center X)",
+            cy: "จุดศูนย์กลาง Y (Center Y)",
+            start: "เริ่มจากองศา (Start Angle)",
+            end: "ถึงองศา (End Angle)",
+            calc: "คำนวณพิกัด",
+            output: "ผลลัพธ์พิกัด (ละเอียดทุก 0.5°):",
+            header: "องศา | พิกัด X | พิกัด Y",
+            alert: "กรุณากรอกข้อมูลให้ครบถ้วนเป็นตัวเลข"
+        }
+    };
+
+    function toggleLang() {
+        currentLang = currentLang === 'th' ? 'en' : 'th';
+        updateUI();
+    }
+
+    function updateUI() {
+        const t = translations[currentLang];
+        document.getElementById('title').innerText = t.title;
+        document.getElementById('lbl-radius').innerText = t.radius;
+        document.getElementById('lbl-cx').innerText = t.cx;
+        document.getElementById('lbl-cy').innerText = t.cy;
+        document.getElementById('lbl-start').innerText = t.start;
+        document.getElementById('lbl-end').innerText = t.end;
+        document.getElementById('btn-calc').innerText = t.calc;
+        document.getElementById('lbl-output').innerText = t.output;
+    }
+
+    function calculate() {
+        const r = parseFloat(document.getElementById('radius').value);
+        const cx = parseFloat(document.getElementById('centerX').value);
+        const cy = parseFloat(document.getElementById('centerY').value);
+        const start = parseFloat(document.getElementById('startAngle').value);
+        const end = parseFloat(document.getElementById('endAngle').value);
+        const t = translations[currentLang];
+
+        if ([r, cx, cy, start, end].some(isNaN)) {
+            alert(t.alert);
+            return;
+        }
+
+        let result = `${t.header}\n`;
+        result += "----------------------------------------\n";
+
+        const step = 0.5;
+        const isForward = start <= end;
+        
+        // วนลูปโดยใช้ความละเอียด 0.5 องศา
+        for (let a = start; isForward ? a <= end : a >= end; isForward ? a += step : a -= step) {
+            const rad = a * (Math.PI / 180);
+            const x = cx + (r * Math.cos(rad));
+            const y = cy + (r * Math.sin(rad));
+
+            // แสดงผลทศนิยม 2 ตำแหน่ง
+            result += `${a.toFixed(1).padStart(6, ' ')}°  |  ${x.toFixed(2).padStart(8, ' ')}  |  ${y.toFixed(2).padStart(8, ' ')}\n`;
+            
+            // Safety break สำหรับเลขทศนิยมสะสม
+            if (Math.abs(a - end) < 0.0001) break;
+        }
+
+        document.getElementById('output').value = result;
+    }
+
+    // Initial load
+    updateUI();
+</script>
+
+</body>
+</html>
